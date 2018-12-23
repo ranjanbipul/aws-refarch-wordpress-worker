@@ -28,26 +28,6 @@ You can launch this CloudFormation stack, using your account, in the following A
 | eu-central-1 |EU (Frankfurt)| [![cloudformation-launch-stack](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-central-1#/stacks/new?stackName=WordPress&templateURL=https://s3.amazonaws.com/webjack/wordpress/latest/templates/aws-refarch-wordpress-worker.yaml) |
 | ap-southeast-2 |AP (Sydney)| [![cloudformation-launch-stack](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-2#/stacks/new?stackName=WordPress&templateURL=https://s3.amazonaws.com/webjack/wordpress/latest/templates/aws-refarch-wordpress-worker.yaml) |
 
-#### Select WordPress version
-
-The version of WordPress can be selected. Possible values are latest, nightly, 4.5, 4.6, 4.7, 4.8, 4.9.
-
-#### Override PHP.ini defaults by downloading an overrides ini file from Amazon S3
-
-Create a custom .ini file that includes PHP overrides and make it publically available in an S3 bucket. These could be common overrides like **memory_limit**, **post_max_size**, **upload_max_filesize**, **max_input_time**, **max_execution_time**, etc. Amazon S3 object path should use https format (e.g.https://s3.amazonaws.com/aws-refarch/wordpress/latest/bits/20-aws.ini). Sample PHP overrides are below and in the [samples/20-aws.ini](samples/20-aws.ini) directory.
-
-; Enable php.ini overrides for hosting WordPress on AWS - https://github.com/awslabs/aws-refarch-wordpress
-
-memory_limit = 128M
-
-post_max_size = 0
-
-upload_max_filesize = 64M
-
-max_input_time = 60
-
-max_execution_time = 30
-
 
 #### Stack Creation
 
@@ -71,7 +51,7 @@ Review the template here [aws-refarch-wordpress-worker.yaml](templates/aws-refar
 #### General AWS
 - EC2 Key Name Pair
 - Email address for WordPress administration and SNS notifications
-- Site Domain Name (e.g. 'example.com') - use this only if you will use your own custom domain name
+- Site Domain Name (e.g. 'worker.example.com') - use this only if you will use your own custom domain name
 - Select if you want to use a AWS CloudFront to cache images at AWS edge locations (3rd party plugins are required to leverage a CDN)
 - Enter the ARN of the AWS Certificate Manager certificate you created in us-east-1 for your custom site domain name
 
@@ -95,20 +75,60 @@ Review the template here [aws-refarch-wordpress-worker.yaml](templates/aws-refar
 
 #### Database
 - Wordpress Database Cluster Address
+  To get it go to RDS console - https://console.aws.amazon.com/rds/home and select the database cluster of the wordpress
+  Copy the endpoint name of writer instance
+  ![](images/aws_rds_cluster_address.png)
 - Wordpress Database Master Username
+  Same as main wordpress
 - Wordpress Database Master Password
+  Same as main wordpress
 - Wordpress Database Name
+  Same as main wordpress
 
 
 #### Web Parameters
 - PHP Version (5.5, 5.6, or 7.0 - recomended)
+- PHP INI Override
+    Override PHP.ini defaults by downloading an overrides ini file from Amazon S3
+
+    Create a custom .ini file that includes PHP overrides and make it publically available in an S3 bucket. These could be common overrides like **memory_limit**, **post_max_size**, **upload_max_filesize**, **max_input_time**, **max_execution_time**, etc. Amazon S3 object path should use https format (e.g.https://s3.amazonaws.com/aws-refarch/wordpress/latest/bits/20-aws.ini). Sample PHP overrides are below and in the [samples/20-aws.ini](samples/20-aws.ini) directory.
+
+    ; Enable php.ini overrides for hosting WordPress on AWS - https://github.com/awslabs/aws-refarch-wordpress
+
+    memory_limit = 128M
+
+    post_max_size = 0
+
+    upload_max_filesize = 64M
+
+    max_input_time = 60
+
+    max_execution_time = 30
 - Web Instance Type
 - The maximum number of instances in the web tier auto scaling group
 - The minimum (and desired) number of instances in the web tier auto scaling group
 
 #### WordPress Parameters
+- Wordpress Version
+  The version of WordPress can be selected. Possible values are latest, nightly, 4.5, 4.6, 4.7, 4.8, 4.9.
 - WordPress Title
 - WordPress Administrator Username
 - WordPress Administrator Username Password
 - WordPress Main Language of the site
 - Wordpress Site Directory
+
+### Cloudfront configuration check
+Go to cloudfront console (https://console.aws.amazon.com/cloudfront/home) and select the cloudfront instance corresponding to worker.
+Check if Alternate Domain Name is set to the worker domain if not then edit and set it.
+![](images/aws_cloudfront.png)
+Also, copy domain name it needs to be set in the dns setting.
+
+### DNS Setting
+Login to your domain provider and add the CNAME entry for domain. 
+if the domain name is worker.example.com set 
+worker CNAME to the domain name shown in the cloudfront 
+
+
+### Reconfiguring Stack (Changing instance size etc)
+Open cloudformation console (https://console.aws.amazon.com/cloudformation/home) and select the stack corrsponding to this architecture.
+Click on Actions > Update Stack > Use Current Template and make require changes and run the update.
